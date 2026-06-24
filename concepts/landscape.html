@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Infinity MEP — Site & Sun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0c1110;--wht:#dce4ea;--cyan:#37c2d6;--accent:#e2542a;--dim:#7e95a3;--grn:#5cc878;--grn2:#3c8f54;--blue:#3f86d6;--yellow:#ffce4d;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:var(--bg);font-family:"IBM Plex Mono",monospace;color:var(--dim)}
+  svg{width:100vw;height:100vh;display:block;touch-action:none;background:radial-gradient(140% 130% at 60% 20%,#101815,var(--bg) 75%)}
+  text{user-select:none}
+  .obj{cursor:move}
+  .obj:hover :is(rect,circle,polygon){filter:brightness(1.3)}
+  #frame{position:fixed;inset:14px;border:1px solid rgba(125,160,176,.28);pointer-events:none;z-index:8}
+  #frame::before,#frame::after{content:"";position:absolute;width:14px;height:14px;border:1px solid var(--accent)}
+  #frame::before{top:-1px;left:-1px;border-right:none;border-bottom:none}
+  #frame::after{bottom:-1px;right:-1px;border-left:none;border-top:none}
+  #tl{position:fixed;top:30px;left:30px;z-index:10;font-size:11px;letter-spacing:.16em;line-height:1.8}
+  #tl b{color:var(--yellow)}
+  .back{position:fixed;top:30px;right:30px;z-index:10;color:var(--dim);text-decoration:none;font-size:11px;
+    letter-spacing:.14em;border:1px solid rgba(125,160,176,.26);padding:9px 14px;border-radius:3px;transition:.2s}
+  .back:hover{color:var(--accent);border-color:var(--accent)}
+  #hint{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:10;font-size:10px;letter-spacing:.18em;opacity:.7;pointer-events:none}
+  #logo{position:fixed;right:30px;bottom:24px;z-index:10}#logo svg{width:32px;height:32px}
+</style>
+</head>
+<body>
+<svg id="scene" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1200 800">
+  <defs>
+    <pattern id="grass" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M5 15 q1 -6 0 -8 M11 15 q-1 -5 0 -7 M16 15 q1 -6 0 -8" fill="none" stroke="var(--grn2)" stroke-width="1" opacity=".4"/>
+    </pattern>
+    <filter id="sh" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4"/></filter>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="800" fill="url(#grass)"/>
+  <!-- contours (elevation) -->
+  <g id="contours" fill="none" stroke="var(--grn2)" opacity=".5"></g>
+  <!-- water -->
+  <path d="M250 560 C 360 520 460 580 430 660 C 405 725 290 730 240 670 C 205 628 200 585 250 560 Z"
+        fill="rgba(63,134,214,.16)" stroke="var(--blue)" stroke-width="1.4"/>
+  <path d="M262 575 C 352 542 436 588 412 650 C 392 705 300 708 260 662 C 232 632 236 596 262 575 Z"
+        fill="none" stroke="var(--blue)" stroke-width="1" opacity=".5"/>
+
+  <g id="shadows"></g>
+  <g id="objects"></g>
+
+  <!-- sun compass -->
+  <g id="sun" style="cursor:grab">
+    <circle id="ring" cx="1040" cy="170" r="84" fill="none" stroke="rgba(125,160,176,.3)" stroke-dasharray="3 7"/>
+    <circle cx="1040" cy="170" r="3" fill="var(--dim)"/>
+    <line id="ray" x1="1040" y1="170" x2="1040" y2="170" stroke="var(--yellow)" stroke-width="1" opacity=".5" stroke-dasharray="2 5"/>
+    <g id="sunMark"><circle r="20" fill="var(--yellow)" opacity=".22" filter="url(#glow)"/><circle r="11" fill="var(--yellow)"/></g>
+  </g>
+</svg>
+<div id="tl">INFINITY MEP · AZ <b id="az">135°</b><br>SITE &amp; SUN STUDY</div>
+<a class="back" href="./">← INDEX</a>
+<div id="hint">DRAG&nbsp;THE&nbsp;SUN&nbsp;·&nbsp;MOVE&nbsp;BUILDINGS&nbsp;&amp;&nbsp;TREES</div>
+<div id="logo"><svg viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="13" stroke="var(--dim)" stroke-width="1.4"/>
+<path d="M7 20 H15 V11 H23" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/>
+<circle cx="7" cy="20" r="2.2" fill="var(--accent)"/><circle cx="23" cy="11" r="2.2" fill="var(--dim)"/></svg></div>
+
+<script>
+(function(){
+  "use strict";
+  const NS="http://www.w3.org/2000/svg";
+  const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const svg=document.getElementById('scene');
+  const shG=document.getElementById('shadows'), obG=document.getElementById('objects'), conG=document.getElementById('contours');
+
+  // contours
+  const cc=[ "M520 250 C 700 200 980 250 1080 360 C 1140 430 1060 540 900 560 C 760 578 560 540 500 430 C 470 360 470 290 520 250 Z",
+    "M560 285 C 710 245 940 290 1025 380 C 1075 438 1010 525 885 540 C 765 555 600 522 552 432 C 528 372 528 320 560 285 Z",
+    "M600 320 C 720 290 900 326 968 398 C 1008 444 958 510 868 522 C 772 535 642 508 604 436 C 584 396 584 350 600 320 Z"];
+  cc.forEach((d,i)=>conG.appendChild(el('path',{d,'stroke-width':1,opacity:(.5-i*.1).toFixed(2)})));
+
+  // objects
+  const objs=[
+    {type:'b', x:600,y:360,w:150,h:100, hf:1.0, fill:'rgba(220,228,234,.12)', stroke:'var(--wht)'},
+    {type:'b', x:820,y:470,w:110,h:130, hf:1.4, fill:'rgba(55,194,214,.10)', stroke:'var(--cyan)'},
+    {type:'b', x:470,y:230,w:90,h:70, hf:0.7, fill:'rgba(220,228,234,.10)', stroke:'var(--wht)'},
+    {type:'t', x:760,y:300, r:34, hf:1.1},
+    {type:'t', x:980,y:380, r:42, hf:1.2},
+    {type:'t', x:560,y:470, r:30, hf:1.0},
+    {type:'t', x:900,y:250, r:26, hf:0.9},
+  ];
+  objs.forEach(o=>{
+    const g=el('g',{class:'obj'});
+    if(o.type==='b'){
+      g.appendChild(el('rect',{x:-o.w/2,y:-o.h/2,width:o.w,height:o.h,fill:o.fill,stroke:o.stroke,'stroke-width':2}));
+      g.appendChild(el('rect',{x:-o.w/2+5,y:-o.h/2+5,width:o.w-10,height:o.h-10,fill:'none',stroke:o.stroke,'stroke-width':1,opacity:.5}));
+      g.appendChild(el('path',{d:`M${-o.w/2} 0H${o.w/2} M0 ${-o.h/2}V${o.h/2}`,stroke:o.stroke,'stroke-width':1,opacity:.3}));
+    } else {
+      g.appendChild(el('circle',{r:o.r,fill:'rgba(92,200,120,.12)',stroke:'var(--grn)','stroke-width':1.6}));
+      g.appendChild(el('circle',{r:o.r*0.6,fill:'none',stroke:'var(--grn)','stroke-width':1,opacity:.6}));
+      g.appendChild(el('path',{d:`M${-o.r} 0H${o.r}M0 ${-o.r}V${o.r}`,stroke:'var(--grn)','stroke-width':1,opacity:.5}));
+    }
+    g.setAttribute('transform',`translate(${o.x} ${o.y})`);
+    o.el=g; obG.appendChild(g);
+  });
+
+  // convex hull (monotone chain)
+  function hull(P){
+    P=P.slice().sort((a,b)=>a.x-b.x||a.y-b.y);
+    const cr=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);
+    const lo=[],up=[];
+    for(const p of P){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p);}
+    for(let i=P.length-1;i>=0;i--){const p=P[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p);}
+    lo.pop();up.pop();return lo.concat(up);
+  }
+  function basePts(o){
+    if(o.type==='b'){return [[-o.w/2,-o.h/2],[o.w/2,-o.h/2],[o.w/2,o.h/2],[-o.w/2,o.h/2]].map(([x,y])=>({x:o.x+x,y:o.y+y}));}
+    const a=[];for(let i=0;i<12;i++){const t=i/12*Math.PI*2;a.push({x:o.x+Math.cos(t)*o.r,y:o.y+Math.sin(t)*o.r});}return a;
+  }
+
+  // sun
+  const CX=1040,CY=170,RR=84; let sx=CX+Math.cos(0.78)*RR, sy=CY+Math.sin(0.78)*RR;
+  const sunMark=document.getElementById('sunMark'), ray=document.getElementById('ray');
+  function updateSun(){
+    sunMark.setAttribute('transform',`translate(${sx} ${sy})`);
+    ray.setAttribute('x2',sx);ray.setAttribute('y2',sy);
+    const ang=Math.atan2(sy-CY,sx-CX);
+    document.getElementById('az').textContent=Math.round((ang*180/Math.PI+360+90)%360)+'°';
+    const dist=Math.hypot(sx-CX,sy-CY)/RR;          // 0 center(high) .. 1 edge(low)
+    const len=40+dist*150;                            // shadow length
+    const dir={x:-Math.cos(ang),y:-Math.sin(ang)};   // shadows cast away from sun
+    renderShadows(dir,len,0.16+dist*0.26);
+  }
+  function renderShadows(dir,len,op){
+    shG.innerHTML='';
+    objs.forEach(o=>{
+      const b=basePts(o), off=b.map(p=>({x:p.x+dir.x*len*o.hf,y:p.y+dir.y*len*o.hf}));
+      const h=hull(b.concat(off));
+      shG.appendChild(el('polygon',{points:h.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' '),
+        fill:'#000',opacity:op.toFixed(2),filter:'url(#sh)'}));
+    });
+  }
+
+  // pointer handling: sun drag + object drag
+  function toW(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+  let mode=null, target=null, start=null;
+  svg.addEventListener('pointerdown',e=>{
+    const w=toW(e);
+    if(e.target.closest('#sun')){mode='sun';auto=false;onMove(e);return;}
+    const og=e.target.closest('.obj');
+    if(og){mode='obj';target=objs.find(o=>o.el===og);start={wx:w.x,wy:w.y,ox:target.x,oy:target.y};auto=false;return;}
+  });
+  function onMove(e){
+    const w=toW(e);
+    if(mode==='sun'){
+      let dx=w.x-CX,dy=w.y-CY,d=Math.hypot(dx,dy);d=Math.max(14,Math.min(RR,d));
+      const a=Math.atan2(dy,dx);sx=CX+Math.cos(a)*d;sy=CY+Math.sin(a)*d;updateSun();
+    } else if(mode==='obj'&&target){
+      target.x=start.ox+(w.x-start.wx);target.y=start.oy+(w.y-start.wy);
+      target.el.setAttribute('transform',`translate(${target.x} ${target.y})`);
+      updateSun();
+    }
+  }
+  window.addEventListener('pointermove',onMove);
+  window.addEventListener('pointerup',()=>{mode=null;target=null;});
+
+  // gentle auto sun until interaction
+  let auto=true,th=0.78;
+  function loop(){if(auto){th+=0.004;sx=CX+Math.cos(th)*RR*0.85;sy=CY+Math.sin(th)*RR*0.85;updateSun();}requestAnimationFrame(loop);}
+  updateSun();loop();
+})();
+</script>
+</body>
+</html>

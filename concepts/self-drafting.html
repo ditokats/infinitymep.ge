@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Infinity MEP — Auto-Draft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0b0e11;--wht:#dce4ea;--cyan:#37c2d6;--accent:#e2542a;--dim:#7e95a3;--grid:#151c22;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:var(--bg);font-family:"IBM Plex Mono",monospace;color:var(--dim)}
+  svg{width:100vw;height:100vh;display:block;cursor:crosshair;touch-action:none;
+      background:radial-gradient(130% 120% at 50% 8%,#10161c,var(--bg) 72%)}
+  text{user-select:none;font-family:"IBM Plex Mono",monospace}
+  .draw{fill:none;transition:stroke-dashoffset .9s cubic-bezier(.4,0,.2,1)}
+  .fade{opacity:0;transition:opacity .5s ease}
+  .fade.on{opacity:1}
+  #frame{position:fixed;inset:14px;border:1px solid rgba(125,160,176,.28);pointer-events:none;z-index:8}
+  #frame::before,#frame::after{content:"";position:absolute;width:14px;height:14px;border:1px solid var(--accent)}
+  #frame::before{top:-1px;left:-1px;border-right:none;border-bottom:none}
+  #frame::after{bottom:-1px;right:-1px;border-left:none;border-top:none}
+  #tl{position:fixed;top:30px;left:30px;z-index:10;font-size:11px;letter-spacing:.16em;line-height:1.8}
+  #tl b{color:var(--cyan)}
+  .back{position:fixed;top:30px;right:30px;z-index:10;color:var(--dim);text-decoration:none;font-size:11px;
+    letter-spacing:.14em;border:1px solid rgba(125,160,176,.26);padding:9px 14px;border-radius:3px;transition:.2s}
+  .back:hover{color:var(--accent);border-color:var(--accent)}
+  #redraw{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:10;display:flex;align-items:center;gap:10px;
+    color:var(--dim);font-size:11px;letter-spacing:.16em;background:rgba(16,22,28,.66);border:1px solid rgba(125,160,176,.26);
+    padding:10px 18px;border-radius:3px;cursor:pointer;backdrop-filter:blur(6px);transition:.2s}
+  #redraw:hover{color:var(--accent);border-color:var(--accent)}
+  #redraw svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6}
+  #logo{position:fixed;right:30px;bottom:24px;z-index:10}#logo svg{width:32px;height:32px}
+</style>
+</head>
+<body>
+<svg id="scene" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1200 800">
+  <defs>
+    <pattern id="g" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="var(--grid)" stroke-width="1"/></pattern>
+    <pattern id="wet" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="9" stroke="rgba(55,194,214,.25)" stroke-width="1"/></pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="800" fill="url(#g)"/>
+  <g id="art"></g>
+  <g id="pen"><circle r="5" fill="none" stroke="var(--accent)" stroke-width="1.4"/><path d="M-9 0H9M0 -9V9" stroke="var(--accent)" stroke-width="1" opacity=".7"/></g>
+</svg>
+<div id="tl">INFINITY MEP · <b id="sheet">A-101</b><br>AUTO-DRAFT</div>
+<a class="back" href="./">← INDEX</a>
+<div id="redraw"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg> RE-DRAFT</div>
+<div id="logo"><svg viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="13" stroke="var(--dim)" stroke-width="1.4"/>
+<path d="M7 20 H15 V11 H23" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/>
+<circle cx="7" cy="20" r="2.2" fill="var(--accent)"/><circle cx="23" cy="11" r="2.2" fill="var(--dim)"/></svg></div>
+
+<script>
+(function(){
+  "use strict";
+  const NS="http://www.w3.org/2000/svg";
+  const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const art=document.getElementById('art'), pen=document.getElementById('pen');
+  const R=(a,b)=>a+Math.random()*(b-a), RI=(a,b)=>Math.floor(R(a,b+1));
+  const M=u=>(u*0.05);
+  let queue=[], timer=null, sheetN=101;
+
+  // guillotine room splitting
+  function split(x,y,w,h,depth,out){
+    if(depth<=0 || (w<170&&h<170) || Math.random()<0.18){ out.push({x,y,w,h}); return; }
+    const vert = w>h ? Math.random()<0.7 : Math.random()<0.3;
+    if(vert){ const cx=x+R(0.35,0.65)*w; split(x,y,cx-x,h,depth-1,out); split(cx,y,x+w-cx,h,depth-1,out); }
+    else    { const cy=y+R(0.35,0.65)*h; split(x,y,w,cy-y,depth-1,out); split(x,cy,w,y+h-cy,depth-1,out); }
+  }
+
+  function line(x1,y1,x2,y2,cls,sw){const p=el('path',{d:`M${x1} ${y1}L${x2} ${y2}`,class:'draw',stroke:cls,'stroke-width':sw||2});return queueDraw(p);}
+  function rect(x,y,w,h,cls,sw){const p=el('path',{d:`M${x} ${y}H${x+w}V${y+h}H${x}Z`,class:'draw',stroke:cls,'stroke-width':sw||2});return queueDraw(p);}
+  function queueDraw(p){art.appendChild(p);const L=p.getTotalLength();p.style.strokeDasharray=L;p.style.strokeDashoffset=L;queue.push({p,L});return p;}
+  function fade(node){art.appendChild(node);node.classList.add('fade');queue.push({fade:node});return node;}
+
+  function generate(){
+    clearTimeout(timer); queue=[]; art.innerHTML='';
+    const OW=RI(560,680), OD=RI(380,460);
+    const x0=600-OW/2, y0=420-OD/2;
+    // outer shell (double line)
+    rect(x0,y0,OW,OD,'var(--wht)',2.4);
+    rect(x0+6,y0+6,OW-12,OD-12,'var(--wht)',1).style.opacity=.5;
+    // rooms
+    const rooms=[]; split(x0+6,y0+6,OW-12,OD-12,3,rooms);
+    rooms.forEach(r=>{
+      // internal partition outline (skip outer edges visually by drawing full rect; overlap ok)
+      rect(r.x,r.y,r.w,r.h,'rgba(220,228,234,.65)',1.2);
+    });
+    // pick a wet room -> hatch + fixtures, after a delay (fade)
+    const wetRoom=rooms[RI(0,rooms.length-1)];
+    fade(el('rect',{x:wetRoom.x+3,y:wetRoom.y+3,width:wetRoom.w-6,height:wetRoom.h-6,fill:'url(#wet)',stroke:'none'}));
+    // doors: small arc on a random internal edge of some rooms
+    rooms.forEach(r=>{ if(Math.random()<0.6){
+      const dw=28, dx=r.x+R(0.2,0.6)*r.w, dy=r.y+r.h;
+      fade(el('path',{d:`M${dx} ${dy} a${dw} ${dw} 0 0 1 ${dw} ${-dw}`,fill:'none',stroke:'var(--cyan)','stroke-width':1.2}));
+      fade(el('path',{d:`M${dx} ${dy} v${-dw}`,stroke:'var(--cyan)','stroke-width':1.4}));
+    }});
+    // windows on outer walls (cyan)
+    for(let i=0;i<RI(3,5);i++){const wx=x0+R(0.15,0.85)*OW;line(wx,y0,wx+50,y0,'var(--cyan)',2.4);}
+    for(let i=0;i<RI(2,4);i++){const wy=y0+R(0.2,0.8)*OD;line(x0,wy,x0,wy+50,'var(--cyan)',2.4);}
+    // dimensions (fade in last)
+    const O=38;
+    fade(el('path',{d:`M${x0} ${y0-O}H${x0+OW} M${x0} ${y0}V${y0-O-6} M${x0+OW} ${y0}V${y0-O-6}`,fill:'none',stroke:'var(--dim)','stroke-width':1}));
+    fade(el('path',{d:`M${x0-O} ${y0}V${y0+OD} M${x0} ${y0}H${x0-O-6} M${x0} ${y0+OD}H${x0-O-6}`,fill:'none',stroke:'var(--dim)','stroke-width':1}));
+    const tW=el('text',{x:x0+OW/2,y:y0-O-9,'font-size':14,fill:'var(--cyan)','text-anchor':'middle'});tW.textContent=M(OW).toFixed(1);fade(tW);
+    const tH=el('text',{x:x0-O-9,y:y0+OD/2,'font-size':14,fill:'var(--cyan)','text-anchor':'middle',transform:`rotate(-90 ${x0-O-9} ${y0+OD/2})`});tH.textContent=M(OD).toFixed(1);fade(tH);
+    // room area tags
+    rooms.forEach(r=>{const a=(M(r.w)*M(r.h)).toFixed(1);const t=el('text',{x:r.x+r.w/2,y:r.y+r.h/2+4,'font-size':11,fill:'var(--dim)','text-anchor':'middle'});t.textContent=a+' m²';fade(t);});
+    // north arrow
+    const ng=el('g',{transform:`translate(${x0+OW+58} ${y0+30})`});
+    ng.appendChild(el('polygon',{points:'0,-22 6,5 0,-1 -6,5',fill:'var(--accent)'}));
+    ng.appendChild(el('circle',{r:20,fill:'none',stroke:'var(--dim)','stroke-width':1,opacity:.5}));
+    fade(ng);
+
+    document.getElementById('sheet').textContent='A-'+(sheetN++);
+    play();
+  }
+
+  function play(){
+    let i=0;
+    pen.style.opacity=1;
+    const stepDur=180;
+    function step(){
+      if(i>=queue.length){ setTimeout(()=>{pen.style.opacity=0;},400); return; }
+      const it=queue[i++];
+      if(it.fade){ it.fade.classList.add('on'); timer=setTimeout(step, 70); return; }
+      it.p.style.strokeDashoffset=0;
+      // move pen to path end
+      try{const pt=it.p.getPointAtLength(it.L);pen.setAttribute('transform',`translate(${pt.x} ${pt.y})`);}catch(e){}
+      timer=setTimeout(step, Math.min(stepDur, 60+it.L*0.18));
+    }
+    step();
+  }
+
+  document.getElementById('redraw').addEventListener('click',generate);
+  document.getElementById('scene').addEventListener('pointerdown',e=>{if(!e.target.closest('a,#redraw'))generate();});
+  // auto re-draft loop
+  setInterval(()=>{ if(document.hidden)return; generate(); }, 11000);
+  generate();
+})();
+</script>
+</body>
+</html>
