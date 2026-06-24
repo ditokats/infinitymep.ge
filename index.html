@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Infinity Map — Construction Consulting · Tbilisi</title>
-<meta name="description" content="Infinity Map is a construction consulting firm in Tbilisi, Georgia — project management, technical supervision, cost control, permitting and due diligence for developers, investors and owners." />
+<title>Infinity MEP — Mechanical, Electrical & Plumbing Engineering · Tbilisi</title>
+<meta name="description" content="Infinity MEP is a construction and MEP engineering consultancy in Tbilisi, Georgia — mechanical, electrical and plumbing design, technical supervision, energy efficiency, permitting and project management." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..600&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -17,7 +17,7 @@
     --line:#c9bfa9;
     --accent:#e2542a;      /* construction safety orange, refined */
     --accent-deep:#b53c18;
-    --blue:#2b4a5e;        /* blueprint slate */
+    --blue:#2b4a5e;        /* engineering slate */
     --maxw:1280px;
     --ease:cubic-bezier(.2,.7,.2,1);
   }
@@ -32,7 +32,7 @@
     -webkit-font-smoothing:antialiased;
     overflow-x:hidden;
   }
-  /* ---- background atmosphere: survey grid + grain ---- */
+  /* ---- background atmosphere: engineering grid + grain ---- */
   body::before{
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background-image:
@@ -69,7 +69,6 @@
   nav{display:flex;align-items:center;justify-content:space-between;height:78px}
   .brand{display:flex;align-items:center;gap:12px;font-family:"IBM Plex Mono",monospace;font-weight:600;letter-spacing:.16em;font-size:14px}
   .brand .mark{width:30px;height:30px;flex:none}
-  .brand .mark circle, .brand .mark path{stroke:var(--ink);}
   .navlinks{display:flex;gap:34px;align-items:center}
   .navlinks a{font-size:14px;font-weight:500;position:relative;color:var(--ink-soft);transition:color .25s}
   .navlinks a::after{content:"";position:absolute;left:0;bottom:-6px;width:0;height:2px;background:var(--accent);transition:width .3s var(--ease)}
@@ -93,15 +92,17 @@
 
   /* ---------- HERO ---------- */
   .hero{position:relative;padding:170px 0 90px;overflow:hidden}
-  .contours{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.5}
+  .contours{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.55}
   .contours svg{position:absolute;right:-6%;top:2%;width:62vw;max-width:1000px;height:auto}
-  .contours path{fill:none;stroke:var(--accent);stroke-width:1;opacity:.32;
-    stroke-dasharray:2200;stroke-dashoffset:2200;animation:draw 3.2s var(--ease) forwards}
-  .contours path:nth-child(2){stroke:var(--blue);opacity:.28;animation-delay:.15s}
-  .contours path:nth-child(3){stroke:var(--accent);opacity:.2;animation-delay:.3s}
-  .contours path:nth-child(4){stroke:var(--blue);opacity:.16;animation-delay:.45s}
-  .contours path:nth-child(5){stroke:var(--accent);opacity:.12;animation-delay:.6s}
+  .contours path{fill:none;stroke:var(--accent);stroke-width:1.4;opacity:.32;stroke-linecap:square;
+    stroke-dasharray:2600;stroke-dashoffset:2600;animation:draw 3.2s var(--ease) forwards}
+  .contours path:nth-child(2){stroke:var(--blue);opacity:.3;animation-delay:.15s}
+  .contours path:nth-child(3){stroke:var(--accent);opacity:.22;animation-delay:.3s}
+  .contours path:nth-child(4){stroke:var(--blue);opacity:.17;animation-delay:.45s}
+  .contours path:nth-child(5){stroke:var(--accent);opacity:.13;animation-delay:.6s}
+  .contours circle{fill:var(--accent);opacity:0;animation:nodeIn .5s var(--ease) forwards;animation-delay:2.6s}
   @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes nodeIn{to{opacity:.5}}
 
   .hero-grid{position:relative;z-index:3;display:grid;grid-template-columns:1.55fr 1fr;gap:40px;align-items:end}
   .coord{display:flex;gap:18px;align-items:center;margin-bottom:26px}
@@ -115,7 +116,7 @@
   h1 .lift{display:inline-block;opacity:0;transform:translateY(115%);}
   .hero.in h1 .lift{animation:lift .9s var(--ease) forwards}
   @keyframes lift{to{opacity:1;transform:translateY(0)}}
-  .hero-sub{max-width:430px;color:var(--ink-soft);font-size:18px;margin-left:auto;padding-bottom:8px;
+  .hero-sub{max-width:440px;color:var(--ink-soft);font-size:18px;margin-left:auto;padding-bottom:8px;
     opacity:0;transform:translateY(20px);}
   .hero.in .hero-sub{animation:rise .8s .5s var(--ease) forwards}
   .hero-actions{display:flex;gap:14px;margin-top:42px;flex-wrap:wrap;
@@ -128,12 +129,12 @@
   .hero.in .hero-meta{animation:rise .8s .8s var(--ease) forwards}
   .hero-meta .item .n{font-family:"Fraunces",serif;font-size:42px;line-height:1;display:flex;align-items:baseline;gap:4px}
   .hero-meta .item .n small{font-size:20px;color:var(--accent)}
-  .hero-meta .item p{font-size:13.5px;color:var(--ink-soft);margin-top:8px;max-width:170px}
+  .hero-meta .item p{font-size:13.5px;color:var(--ink-soft);margin-top:8px;max-width:175px}
 
   /* ---------- SECTION SHELL ---------- */
   section{position:relative;z-index:2;padding:104px 0}
   .sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;margin-bottom:56px;flex-wrap:wrap}
-  .sec-head h2{font-family:"Fraunces",serif;font-weight:400;font-size:clamp(32px,4.4vw,58px);line-height:1.02;letter-spacing:-.02em;max-width:760px}
+  .sec-head h2{font-family:"Fraunces",serif;font-weight:400;font-size:clamp(32px,4.4vw,58px);line-height:1.02;letter-spacing:-.02em;max-width:780px}
   .sec-head .label{margin-bottom:18px;display:block}
   .reveal{opacity:0;transform:translateY(34px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
   .reveal.show{opacity:1;transform:none}
@@ -195,7 +196,7 @@
   .cta-box::after{content:"";position:absolute;right:60px;top:-90px;width:220px;height:220px;border-radius:50%;
     border:30px solid rgba(255,255,255,.09)}
   .cta-box .label{color:rgba(255,255,255,.85)}
-  .cta-box h2{font-family:"Fraunces",serif;font-weight:400;font-size:clamp(34px,5vw,64px);line-height:1.02;margin:16px 0 30px;max-width:680px;position:relative;z-index:2}
+  .cta-box h2{font-family:"Fraunces",serif;font-weight:400;font-size:clamp(34px,5vw,64px);line-height:1.02;margin:16px 0 30px;max-width:700px;position:relative;z-index:2}
   .cta-contacts{display:flex;gap:48px;flex-wrap:wrap;position:relative;z-index:2;margin-top:38px}
   .cta-contacts a{display:block}
   .cta-contacts .label{color:rgba(255,255,255,.7);margin-bottom:6px}
@@ -235,7 +236,6 @@
   html[lang="ka"] [data-en]{display:none}
   html[lang="ka"] [data-ka]{display:inline}
   html[lang="ka"] p[data-ka],html[lang="ka"] h1[data-ka],html[lang="ka"] div[data-ka]{display:block}
-  html[lang="ka"]{font-feature-settings:normal}
 </style>
 </head>
 <body>
@@ -245,11 +245,12 @@
     <nav>
       <a class="brand" href="#top">
         <svg class="mark" viewBox="0 0 30 30" fill="none">
-          <circle cx="15" cy="15" r="13" stroke-width="1.4"/>
-          <path d="M3 19 Q9 9 15 15 T27 11" stroke-width="1.4" stroke="var(--accent)"/>
-          <circle cx="15" cy="15" r="2.4" fill="var(--accent)" stroke="none"/>
+          <circle cx="15" cy="15" r="13" stroke="var(--ink)" stroke-width="1.4"/>
+          <path d="M7 20 H15 V11 H23" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="7" cy="20" r="2.2" fill="var(--accent)"/>
+          <circle cx="23" cy="11" r="2.2" fill="var(--ink)"/>
         </svg>
-        INFINITY&nbsp;MAP
+        INFINITY&nbsp;MEP
       </a>
       <div class="navlinks">
         <a href="#services"><span data-en>Services</span><span data-ka>სერვისები</span></a>
@@ -276,11 +277,14 @@
 <section class="hero" id="hero">
   <div class="contours">
     <svg viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid meet">
-      <path d="M-50 600 C 200 480 360 560 520 460 S 820 300 1080 360"/>
-      <path d="M-50 520 C 220 410 380 490 540 390 S 840 240 1080 290"/>
-      <path d="M-50 440 C 240 350 400 420 560 320 S 860 180 1080 220"/>
-      <path d="M-50 360 C 260 290 420 350 580 250 S 880 120 1080 150"/>
-      <path d="M-50 280 C 280 230 440 280 600 190 S 900 70 1080 90"/>
+      <path d="M-50 560 H180 V440 H420 V520 H680 V380 H980 V300 H1080"/>
+      <path d="M-50 480 H140 V360 H460 V300 H720 V420 H1080"/>
+      <path d="M-50 400 H260 V300 H520 V360 H820 V240 H1080"/>
+      <path d="M-50 320 H200 V240 H600 V300 H900 V180 H1080"/>
+      <path d="M-50 240 H320 V180 H640 V120 H1080"/>
+      <circle cx="180" cy="440" r="5"/><circle cx="680" cy="380" r="5"/>
+      <circle cx="460" cy="300" r="5"/><circle cx="600" cy="240" r="5"/>
+      <circle cx="820" cy="240" r="5"/>
     </svg>
   </div>
   <div class="wrap">
@@ -292,20 +296,20 @@
       <div>
         <h1>
           <span data-en>
-            <span class="lift" style="animation-delay:.05s">We map the</span><br>
-            <span class="lift" style="animation-delay:.18s"><em>path</em> from plot</span><br>
-            <span class="lift" style="animation-delay:.31s">to finished build.</span>
+            <span class="lift" style="animation-delay:.05s">We engineer the</span><br>
+            <span class="lift" style="animation-delay:.18s"><em>systems</em> behind</span><br>
+            <span class="lift" style="animation-delay:.31s">great buildings.</span>
           </span>
           <span data-ka>
-            <span class="lift" style="animation-delay:.05s">მივყავართ მიწის</span><br>
-            <span class="lift" style="animation-delay:.18s"><em>ნაკვეთიდან</em></span><br>
-            <span class="lift" style="animation-delay:.31s">დასრულებულ შენობამდე.</span>
+            <span class="lift" style="animation-delay:.05s">ვაპროექტებთ</span><br>
+            <span class="lift" style="animation-delay:.18s">საინჟინრო <em>სისტემებს</em></span><br>
+            <span class="lift" style="animation-delay:.31s">თქვენი შენობისთვის.</span>
           </span>
         </h1>
       </div>
       <p class="hero-sub">
-        <span data-en>Independent construction consulting in Tbilisi — protecting your budget, programme and quality from feasibility through to handover.</span>
-        <span data-ka>დამოუკიდებელი სამშენებლო კონსალტინგი თბილისში — ვიცავთ თქვენს ბიუჯეტს, ვადებსა და ხარისხს კონცეფციიდან ჩაბარებამდე.</span>
+        <span data-en>MEP engineering &amp; construction consulting in Tbilisi — the mechanical, electrical and plumbing systems that make a building work, designed, supervised and optimised.</span>
+        <span data-ka>MEP საინჟინრო და სამშენებლო კონსალტინგი თბილისში — მექანიკური, ელექტრო და სანტექნიკური სისტემები: დაპროექტებიდან ექსპლუატაციაში გაშვებამდე.</span>
       </p>
     </div>
     <div class="hero-actions">
@@ -313,9 +317,9 @@
       <a href="#services" class="btn ghost"><span data-en>Explore services</span><span data-ka>ნახე სერვისები</span></a>
     </div>
     <div class="hero-meta">
-      <div class="item"><div class="n">120<small>+</small></div><p><span data-en>Projects guided across Georgia</span><span data-ka>პროექტი საქართველოს მასშტაბით</span></p></div>
-      <div class="item"><div class="n">14<small>%</small></div><p><span data-en>Average cost saved vs. baseline</span><span data-ka>საშუალო ხარჯის დაზოგვა</span></p></div>
-      <div class="item"><div class="n">0<small>.</small></div><p><span data-en>Conflicts of interest — we never build</span><span data-ka>ინტერესთა კონფლიქტი — ჩვენ არ ვაშენებთ</span></p></div>
+      <div class="item"><div class="n">120<small>+</small></div><p><span data-en>Buildings engineered across Georgia</span><span data-ka>შენობა საქართველოს მასშტაბით</span></p></div>
+      <div class="item"><div class="n">14<small>%</small></div><p><span data-en>Average energy cost cut by efficient design</span><span data-ka>ენერგოხარჯის საშუალო შემცირება</span></p></div>
+      <div class="item"><div class="n">0<small>.</small></div><p><span data-en>Conflicts of interest — independent by design</span><span data-ka>ინტერესთა კონფლიქტი — დამოუკიდებელი</span></p></div>
     </div>
   </div>
 </section>
@@ -325,44 +329,44 @@
   <div class="sec-head reveal">
     <div>
       <span class="label">§ 01 — Capabilities</span>
-      <h2><span data-en>End-to-end advisory for owners, investors and developers.</span><span data-ka>სრული საკონსულტაციო მომსახურება მესაკუთრეებისა და ინვესტორებისთვის.</span></h2>
+      <h2><span data-en>Engineering and advisory across the whole building lifecycle.</span><span data-ka>საინჟინრო და საკონსულტაციო მომსახურება შენობის სრულ ციკლზე.</span></h2>
     </div>
   </div>
   <div class="services reveal">
     <div class="svc">
       <span class="num">01</span>
-      <h3><span data-en>Owner's Project Management</span><span data-ka>პროექტის მენეჯმენტი</span></h3>
-      <p><span data-en>We represent your interests end-to-end — coordinating designers, contractors and authorities so the project lands on time and on budget.</span><span data-ka>ვწარმოადგენთ თქვენს ინტერესებს — ვკოორდინირებთ დიზაინერებს, კონტრაქტორებსა და უწყებებს ვადებსა და ბიუჯეტში.</span></p>
-      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 19V5M5 19h14M9 15l3-4 3 2 4-6"/></svg>
+      <h3><span data-en>MEP Design Engineering</span><span data-ka>MEP დაპროექტება</span></h3>
+      <p><span data-en>Heating, ventilation, air-conditioning, electrical and plumbing — fully coordinated systems designed for performance and efficiency.</span><span data-ka>გათბობა, ვენტილაცია, კონდიცირება, ელექტრო და სანტექნიკა — სრულად კოორდინირებული, ეფექტური სისტემები.</span></p>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 18V8M4 8l4-4M9 18V4M14 18v-8M19 18V7M9 9h5"/></svg>
     </div>
     <div class="svc">
       <span class="num">02</span>
       <h3><span data-en>Technical Supervision</span><span data-ka>ტექნიკური ზედამხედველობა</span></h3>
-      <p><span data-en>Independent site supervision and quality control to Georgian norms and international standards — every pour, every detail verified.</span><span data-ka>დამოუკიდებელი ზედამხედველობა და ხარისხის კონტროლი ქართული და საერთაშორისო სტანდარტებით.</span></p>
+      <p><span data-en>Independent on-site supervision of MEP installation and quality control to Georgian norms and international standards.</span><span data-ka>დამოუკიდებელი ზედამხედველობა MEP მონტაჟზე და ხარისხის კონტროლი ქართული და საერთაშორისო სტანდარტებით.</span></p>
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
     </div>
     <div class="svc">
       <span class="num">03</span>
-      <h3><span data-en>Cost &amp; Quantity Control</span><span data-ka>ხარჯთაღრიცხვა</span></h3>
-      <p><span data-en>Detailed estimates, BoQ, tendering and payment certification — so you know exactly where every GEL goes.</span><span data-ka>დეტალური ხარჯთაღრიცხვა, ტენდერი და გადახდების სერტიფიცირება — სრული გამჭვირვალობა.</span></p>
+      <h3><span data-en>Project &amp; Cost Management</span><span data-ka>მენეჯმენტი და ხარჯთაღრიცხვა</span></h3>
+      <p><span data-en>Programme, budgets, tendering and payment certification — your project delivered on time and on budget.</span><span data-ka>ვადები, ბიუჯეტი, ტენდერი და გადახდების სერტიფიცირება — პროექტი ვადებსა და ბიუჯეტში.</span></p>
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
     </div>
     <div class="svc">
       <span class="num">04</span>
-      <h3><span data-en>Permitting &amp; Legalization</span><span data-ka>ნებართვები და ლეგალიზაცია</span></h3>
-      <p><span data-en>Construction permits, land use, and documentation handled with the Tbilisi municipality and relevant authorities.</span><span data-ka>მშენებლობის ნებართვა, მიწათსარგებლობა და დოკუმენტაცია თბილისის მერიასთან.</span></p>
+      <h3><span data-en>Permitting &amp; Compliance</span><span data-ka>ნებართვები და შესაბამისობა</span></h3>
+      <p><span data-en>Construction permits, technical documentation and code compliance handled with the Tbilisi municipality and authorities.</span><span data-ka>მშენებლობის ნებართვა, ტექნიკური დოკუმენტაცია და ნორმებთან შესაბამისობა თბილისის მერიასთან.</span></p>
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 14l2 2 4-4"/></svg>
     </div>
     <div class="svc">
       <span class="num">05</span>
-      <h3><span data-en>Feasibility &amp; Due Diligence</span><span data-ka>მიზანშეწონილობა და დიუ-დილიჯენსი</span></h3>
-      <p><span data-en>Technical and financial assessment before you commit — risk, ROI, and buildability mapped before the first shovel.</span><span data-ka>ტექნიკური და ფინანსური შეფასება ინვესტიციამდე — რისკი, ROI და განხორციელებადობა.</span></p>
-      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3v18h18"/><path d="m7 14 3-3 3 3 4-5"/></svg>
+      <h3><span data-en>Energy &amp; Efficiency</span><span data-ka>ენერგოეფექტურობა</span></h3>
+      <p><span data-en>Energy modelling, load analysis and efficiency strategies that cut operating costs for the life of the building.</span><span data-ka>ენერგომოდელირება, დატვირთვის ანალიზი და ეფექტურობის სტრატეგია — ნაკლები საექსპლუატაციო ხარჯი.</span></p>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
     </div>
     <div class="svc">
       <span class="num">06</span>
-      <h3><span data-en>Design &amp; BIM Coordination</span><span data-ka>დიზაინი და BIM კოორდინაცია</span></h3>
-      <p><span data-en>Clash-free coordination of architecture, structure and MEP — catching conflicts in the model, not on site.</span><span data-ka>არქიტექტურის, კონსტრუქციისა და საინჟინრო სისტემების კოორდინაცია მოდელში, არა ობიექტზე.</span></p>
+      <h3><span data-en>BIM &amp; Clash Coordination</span><span data-ka>BIM კოორდინაცია</span></h3>
+      <p><span data-en>Clash-free coordination of architecture, structure and MEP — conflicts caught in the model, not on site.</span><span data-ka>არქიტექტურის, კონსტრუქციისა და MEP სისტემების კოორდინაცია მოდელში, არა ობიექტზე.</span></p>
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 2 7l10 5 10-5z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg>
     </div>
   </div>
@@ -373,12 +377,12 @@
   <div class="approach reveal">
     <div class="wrap">
       <span class="label">§ 02 — How we work</span>
-      <h2 style="margin-top:16px"><span data-en>A surveyor's discipline,<br>applied to your whole project.</span><span data-ka>გეოდეზისტის სიზუსტე —<br>გამოყენებული მთელ პროექტზე.</span></h2>
+      <h2 style="margin-top:16px"><span data-en>An engineer's discipline,<br>applied to your whole project.</span><span data-ka>ინჟინრის სიზუსტე —<br>გამოყენებული მთელ პროექტზე.</span></h2>
       <div class="steps">
-        <div class="step"><span class="st-n">/ 01</span><h4><span data-en>Survey</span><span data-ka>კვლევა</span></h4><p><span data-en>We assess the site, brief, budget and constraints — and define what success means in numbers.</span><span data-ka>ვაფასებთ ობიექტს, ბიუჯეტსა და შეზღუდვებს — ვაყალიბებთ წარმატების კრიტერიუმებს.</span></p></div>
-        <div class="step"><span class="st-n">/ 02</span><h4><span data-en>Plan</span><span data-ka>დაგეგმვა</span></h4><p><span data-en>Programme, cost plan and procurement strategy — a clear route with every risk flagged early.</span><span data-ka>ვადები, ბიუჯეტი და შესყიდვების სტრატეგია — მკაფიო გზა ადრეული რისკებით.</span></p></div>
-        <div class="step"><span class="st-n">/ 03</span><h4><span data-en>Build</span><span data-ka>მშენებლობა</span></h4><p><span data-en>On-site supervision, weekly reporting and proactive issue resolution at every stage.</span><span data-ka>ზედამხედველობა, ყოველკვირეული ანგარიში და პრობლემების დროული გადაჭრა.</span></p></div>
-        <div class="step"><span class="st-n">/ 04</span><h4><span data-en>Hand over</span><span data-ka>ჩაბარება</span></h4><p><span data-en>Snagging, commissioning and complete documentation — handed over clean and defect-free.</span><span data-ka>ხარვეზების აღმოფხვრა, გაშვება და სრული დოკუმენტაცია — სუფთა ჩაბარება.</span></p></div>
+        <div class="step"><span class="st-n">/ 01</span><h4><span data-en>Assess</span><span data-ka>შეფასება</span></h4><p><span data-en>We study the building, brief and loads — and define performance targets in numbers.</span><span data-ka>ვსწავლობთ შენობას, დავალებასა და დატვირთვებს — ვაყალიბებთ მიზნებს ციფრებში.</span></p></div>
+        <div class="step"><span class="st-n">/ 02</span><h4><span data-en>Design</span><span data-ka>დაპროექტება</span></h4><p><span data-en>Coordinated MEP design, calculations and a cost plan — every system sized right the first time.</span><span data-ka>კოორდინირებული MEP დაპროექტება, გათვლები და ბიუჯეტი — ყველა სისტემა სწორად.</span></p></div>
+        <div class="step"><span class="st-n">/ 03</span><h4><span data-en>Supervise</span><span data-ka>ზედამხედველობა</span></h4><p><span data-en>On-site supervision of installation, weekly reporting and proactive issue resolution.</span><span data-ka>მონტაჟის ზედამხედველობა, ყოველკვირეული ანგარიში და პრობლემების დროული გადაჭრა.</span></p></div>
+        <div class="step"><span class="st-n">/ 04</span><h4><span data-en>Commission</span><span data-ka>გაშვება</span></h4><p><span data-en>Testing, commissioning and full documentation — every system handed over proven and running.</span><span data-ka>ტესტირება, ექსპლუატაციაში გაშვება და სრული დოკუმენტაცია — ყველა სისტემა გამართულად ჩაბარდება.</span></p></div>
       </div>
     </div>
   </div>
@@ -389,7 +393,7 @@
   <div class="sec-head reveal">
     <div>
       <span class="label">§ 03 — Sectors</span>
-      <h2><span data-en>We consult across the sectors shaping modern Georgia.</span><span data-ka>ვმუშაობთ თანამედროვე საქართველოს მთავარ სექტორებში.</span></h2>
+      <h2><span data-en>We engineer across the sectors shaping modern Georgia.</span><span data-ka>ვმუშაობთ თანამედროვე საქართველოს მთავარ სექტორებში.</span></h2>
     </div>
   </div>
   <div class="sectors reveal">
@@ -398,8 +402,8 @@
     <span class="chip"><span data-en>Commercial &amp; Retail</span><span data-ka>კომერციული</span></span>
     <span class="chip"><span data-en>Office &amp; Mixed-use</span><span data-ka>ოფისი / შერეული</span></span>
     <span class="chip"><span data-en>Industrial &amp; Logistics</span><span data-ka>ინდუსტრიული</span></span>
-    <span class="chip"><span data-en>Infrastructure</span><span data-ka>ინფრასტრუქტურა</span></span>
-    <span class="chip"><span data-en>Renovation &amp; Restoration</span><span data-ka>რეკონსტრუქცია</span></span>
+    <span class="chip"><span data-en>Data Centres &amp; Critical</span><span data-ka>დატა-ცენტრები</span></span>
+    <span class="chip"><span data-en>Healthcare</span><span data-ka>სამედიცინო</span></span>
     <span class="chip"><span data-en>Private Villas</span><span data-ka>კერძო სახლები</span></span>
   </div>
 </section>
@@ -408,29 +412,32 @@
 <section id="why" class="wrap">
   <div class="split">
     <div class="reveal">
-      <span class="label">§ 04 — Why Infinity Map</span>
+      <span class="label">§ 04 — Why Infinity MEP</span>
       <h2 style="font-family:Fraunces;font-weight:400;font-size:clamp(30px,4vw,52px);line-height:1.04;letter-spacing:-.02em;margin:18px 0 10px">
         <span data-en>On your side of the table.</span><span data-ka>თქვენს მხარეს.</span>
       </h2>
       <ul class="why-list">
-        <li><span class="k">A.</span><div><h4><span data-en>Truly independent</span><span data-ka>სრულიად დამოუკიდებელი</span></h4><p><span data-en>We don't build or sell materials. Our only incentive is your project's success.</span><span data-ka>ჩვენ არ ვაშენებთ და არ ვყიდით მასალას. ჩვენი ერთადერთი ინტერესი თქვენი წარმატებაა.</span></p></div></li>
-        <li><span class="k">B.</span><div><h4><span data-en>Local expertise, global standards</span><span data-ka>ლოკალური ცოდნა, საერთაშორისო სტანდარტი</span></h4><p><span data-en>Fluent in Georgian regulation and FIDIC / international best practice alike.</span><span data-ka>ვფლობთ ქართულ რეგულაციებსა და FIDIC / საერთაშორისო პრაქტიკას.</span></p></div></li>
+        <li><span class="k">A.</span><div><h4><span data-en>Truly independent</span><span data-ka>სრულიად დამოუკიდებელი</span></h4><p><span data-en>We don't install or sell equipment. Our only incentive is your project's success.</span><span data-ka>ჩვენ არ ვამონტაჟებთ და არ ვყიდით აღჭურვილობას. ჩვენი ერთადერთი ინტერესი თქვენი წარმატებაა.</span></p></div></li>
+        <li><span class="k">B.</span><div><h4><span data-en>Local expertise, global standards</span><span data-ka>ლოკალური ცოდნა, საერთაშორისო სტანდარტი</span></h4><p><span data-en>Fluent in Georgian regulation and ASHRAE / FIDIC international best practice alike.</span><span data-ka>ვფლობთ ქართულ რეგულაციებსა და ASHRAE / FIDIC საერთაშორისო პრაქტიკას.</span></p></div></li>
         <li><span class="k">C.</span><div><h4><span data-en>Numbers you can trust</span><span data-ka>სანდო ციფრები</span></h4><p><span data-en>Transparent reporting and audited cost control at every milestone.</span><span data-ka>გამჭვირვალე ანგარიშგება და აუდირებული ხარჯების კონტროლი.</span></p></div></li>
       </ul>
     </div>
     <div class="blueprint reveal" aria-hidden="true">
-      <svg viewBox="0 0 400 400" fill="none" stroke="var(--blue)" stroke-width="1" opacity=".55">
+      <svg viewBox="0 0 400 400" fill="none" stroke="var(--blue)" stroke-width="1" opacity=".6">
         <rect x="60" y="60" width="280" height="280" stroke-dasharray="4 4"/>
-        <rect x="100" y="100" width="150" height="200"/>
-        <rect x="250" y="160" width="90" height="140"/>
-        <path d="M100 160h150M100 220h150M175 100v200"/>
-        <circle cx="300" cy="110" r="34" stroke="var(--accent)"/>
+        <!-- riser / routing schematic -->
+        <path d="M90 320 V160 H200 V100 H310" stroke="var(--accent)" stroke-width="1.4"/>
+        <path d="M90 290 H250 V200 H310"/>
+        <path d="M140 320 V230 H310"/>
+        <circle cx="90" cy="320" r="6" fill="var(--accent)" stroke="none"/>
+        <circle cx="200" cy="160" r="5" fill="var(--blue)" stroke="none"/>
+        <circle cx="250" cy="200" r="5" fill="var(--blue)" stroke="none"/>
+        <circle cx="310" cy="100" r="7" stroke="var(--accent)"/>
         <path d="M60 360h280M40 60v280" stroke-width="1.4"/>
-        <path d="M60 350l8-5M60 350l8 5" stroke="var(--accent)"/>
       </svg>
-      <span class="tag" style="top:14px;left:14px">DWG · INFINITYMAP / SITE-01</span>
+      <span class="tag" style="top:14px;left:14px">DWG · INFINITYMEP / MEP-01</span>
       <span class="tag" style="bottom:14px;right:14px">SCALE 1:200</span>
-      <span class="tag" style="top:120px;right:30px;color:var(--accent-deep);border-color:var(--accent)">ZONE A</span>
+      <span class="tag" style="top:120px;right:30px;color:var(--accent-deep);border-color:var(--accent)">RISER A</span>
     </div>
   </div>
 </section>
@@ -439,7 +446,7 @@
 <section id="contact" class="wrap cta">
   <div class="cta-box reveal">
     <span class="label">§ 05 — Let's talk</span>
-    <h2><span data-en>Have a plot, a building, or a problem on site? Let's map the way forward.</span><span data-ka>გაქვთ ნაკვეთი, შენობა ან პრობლემა ობიექტზე? დავგეგმოთ შემდეგი ნაბიჯი.</span></h2>
+    <h2><span data-en>Planning a build, a fit-out, or a system that needs fixing? Let's engineer it right.</span><span data-ka>გეგმავთ მშენებლობას, რემონტს ან გჭირდებათ სისტემის გამართვა? მოდი, სწორად გავაკეთოთ.</span></h2>
     <a href="mailto:info@infinitymep.ge" class="btn light"><span data-en>Email us</span><span data-ka>მოგვწერეთ</span> →</a>
     <div class="cta-contacts">
       <a href="mailto:info@infinitymep.ge"><span class="label">Email</span><span class="v">info@infinitymep.ge</span></a>
@@ -456,17 +463,17 @@
     <div class="foot-grid">
       <div style="max-width:320px">
         <a class="brand" href="#top">
-          <svg class="mark" viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="13" stroke-width="1.4" stroke="var(--ink)"/><path d="M3 19 Q9 9 15 15 T27 11" stroke-width="1.4" stroke="var(--accent)"/><circle cx="15" cy="15" r="2.4" fill="var(--accent)"/></svg>
-          INFINITY&nbsp;MAP
+          <svg class="mark" viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="13" stroke="var(--ink)" stroke-width="1.4"/><path d="M7 20 H15 V11 H23" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/><circle cx="7" cy="20" r="2.2" fill="var(--accent)"/><circle cx="23" cy="11" r="2.2" fill="var(--ink)"/></svg>
+          INFINITY&nbsp;MEP
         </a>
-        <p style="color:var(--ink-soft);font-size:14.5px"><span data-en>Independent construction consulting, project management and technical supervision — Tbilisi, Georgia.</span><span data-ka>დამოუკიდებელი სამშენებლო კონსალტინგი და ზედამხედველობა — თბილისი, საქართველო.</span></p>
+        <p style="color:var(--ink-soft);font-size:14.5px"><span data-en>Independent MEP engineering, construction consulting and technical supervision — Tbilisi, Georgia.</span><span data-ka>დამოუკიდებელი MEP საინჟინრო, სამშენებლო კონსალტინგი და ზედამხედველობა — თბილისი, საქართველო.</span></p>
       </div>
       <div class="foot-col">
         <h5><span data-en>Services</span><span data-ka>სერვისები</span></h5>
-        <a href="#services"><span data-en>Project Management</span><span data-ka>მენეჯმენტი</span></a>
+        <a href="#services"><span data-en>MEP Design</span><span data-ka>MEP დაპროექტება</span></a>
         <a href="#services"><span data-en>Technical Supervision</span><span data-ka>ზედამხედველობა</span></a>
-        <a href="#services"><span data-en>Cost Control</span><span data-ka>ხარჯთაღრიცხვა</span></a>
-        <a href="#services"><span data-en>Permitting</span><span data-ka>ნებართვები</span></a>
+        <a href="#services"><span data-en>Project &amp; Cost</span><span data-ka>მენეჯმენტი</span></a>
+        <a href="#services"><span data-en>Energy &amp; Efficiency</span><span data-ka>ენერგოეფექტურობა</span></a>
       </div>
       <div class="foot-col">
         <h5><span data-en>Company</span><span data-ka>კომპანია</span></h5>
@@ -483,7 +490,7 @@
       </div>
     </div>
     <div class="foot-bottom">
-      <span>© <span id="yr"></span> INFINITY MAP · INFINITYMEP.GE</span>
+      <span>© <span id="yr"></span> INFINITY MEP · INFINITYMEP.GE</span>
       <span>41.7151° N · 44.8271° E — TBILISI</span>
     </div>
   </div>
