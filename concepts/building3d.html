@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Infinity MEP — Building 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#2f3a42;--dim:#7c8893;--accent:#e2542a;--blue:#2f80ff;--cyan:#16bcd4;--amber:#ffb02e;--line:#cdd4da;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;font-family:"IBM Plex Mono",monospace;color:var(--ink);
+    background:radial-gradient(120% 120% at 50% 8%,#fbfaf7 0%,#e9edf1 55%,#dde3e9 100%)}
+  #c{position:fixed;inset:0;display:block;touch-action:none}
+  .brandtag{position:fixed;left:22px;top:20px;z-index:5;display:flex;align-items:center;gap:9px;font-size:11px;letter-spacing:.18em;color:#5d6b75}
+  .brandtag svg{width:26px;height:26px}
+  .back{position:fixed;right:22px;top:20px;z-index:5;color:#5d6b75;text-decoration:none;font-size:11px;letter-spacing:.14em;
+    border:1px solid var(--line);padding:9px 13px;border-radius:8px;background:rgba(255,255,255,.55);transition:.15s}
+  .back:hover{color:var(--accent);border-color:var(--accent)}
+  #dock{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:5;display:flex;gap:8px;align-items:center;
+    background:rgba(255,255,255,.66);border:1px solid var(--line);border-radius:12px;padding:9px;backdrop-filter:blur(10px);
+    box-shadow:0 14px 40px -20px rgba(0,0,0,.4)}
+  #dock button{height:42px;padding:0 14px;display:flex;align-items:center;gap:9px;border:1px solid transparent;background:none;
+    cursor:pointer;border-radius:8px;color:#55606a;font-family:inherit;font-size:11px;letter-spacing:.12em;transition:.15s}
+  #dock button:hover{background:#eef1f4}
+  #dock button.on{background:#fff;box-shadow:inset 0 0 0 1px var(--line)}
+  #dock .sw{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:10px}
+  #dock .sep{width:1px;height:26px;background:var(--line);margin:0 3px}
+  #dock svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  #ex{position:fixed;right:26px;top:50%;transform:translateY(-50%);z-index:5;height:240px;display:flex;flex-direction:column;align-items:center;gap:10px}
+  #ex input{writing-mode:vertical-lr;direction:rtl;width:6px;height:200px;accent-color:var(--accent);cursor:pointer}
+  #ex .lbl{font-size:9px;letter-spacing:.2em;color:var(--dim)}
+  #hint{position:fixed;left:50%;top:78px;transform:translateX(-50%);z-index:5;font-size:10px;letter-spacing:.18em;color:var(--dim);
+    opacity:.75;transition:opacity .5s}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="brandtag">
+  <svg viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="13" stroke="#5d6b75" stroke-width="1.4"/>
+  <path d="M7 20 H15 V11 H23" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round"/>
+  <circle cx="7" cy="20" r="2.2" fill="var(--accent)"/><circle cx="23" cy="11" r="2.2" fill="#5d6b75"/></svg>
+  INFINITY&nbsp;MEP · 3D
+</div>
+<a class="back" href="./">← INDEX</a>
+<div id="hint">DRAG TO ORBIT · SCROLL TO ZOOM · SLIDE TO EXPLODE →</div>
+
+<div id="ex"><span class="lbl">EXPLODE</span><input id="exr" type="range" min="0" max="1" step="0.01" value="0"><span class="lbl">▲</span></div>
+
+<div id="dock">
+  <button id="b-water" class="on"><span class="sw" style="background:var(--blue)">💧</span>WATER</button>
+  <button id="b-air" class="on"><span class="sw" style="background:var(--cyan)">❄</span>HVAC</button>
+  <button id="b-power" class="on"><span class="sw" style="background:var(--amber)">⚡</span>POWER</button>
+  <div class="sep"></div>
+  <button id="b-rot" class="on"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>SPIN</button>
+  <button id="b-reset"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 9v11h14V9"/></svg>RESET</button>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();
+scene.fog=new THREE.Fog(0xe6eaee, 26, 60);
+
+const camera=new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.1, 200);
+camera.position.set(11,9,13);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=.08;
+controls.target.set(0,3,0); controls.minDistance=8; controls.maxDistance=34;
+controls.maxPolarAngle=Math.PI*0.49; controls.autoRotate=true; controls.autoRotateSpeed=0.7;
+
+// lights
+scene.add(new THREE.HemisphereLight(0xffffff,0xb9c2cc,0.95));
+const sun=new THREE.DirectionalLight(0xfff4e6,1.15);
+sun.position.set(9,16,7); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048); sun.shadow.camera.near=1; sun.shadow.camera.far=60;
+sun.shadow.camera.left=-16; sun.shadow.camera.right=16; sun.shadow.camera.top=16; sun.shadow.camera.bottom=-16;
+sun.shadow.bias=-0.0004; scene.add(sun);
+
+// ground + grid
+const ground=new THREE.Mesh(new THREE.CircleGeometry(40,64),
+  new THREE.MeshStandardMaterial({color:0xeef0f0,roughness:1,metalness:0}));
+ground.rotation.x=-Math.PI/2; ground.position.y=-0.02; ground.receiveShadow=true; scene.add(ground);
+const grid=new THREE.GridHelper(60,60,0xcdd4da,0xdde2e7); grid.position.y=0; scene.add(grid);
+
+// ---- materials ----
+const matSlab=new THREE.MeshStandardMaterial({color:0xeceae3,roughness:.85});
+const matFrame=new THREE.MeshStandardMaterial({color:0xb9bfc6,roughness:.45,metalness:.6});
+const matGlass=new THREE.MeshStandardMaterial({color:0xbcd6ea,roughness:.12,metalness:.1,transparent:true,opacity:.26});
+const matCore=new THREE.MeshStandardMaterial({color:0xd7d1c5,roughness:.8});
+const sysMat=c=>new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.55,roughness:.4});
+const COL={water:0x2f80ff,air:0x16bcd4,power:0xffb02e};
+
+const W=6, D=4, FH=1.15, FLOORS=5, EXP=1.25;
+const building=new THREE.Group(); scene.add(building);
+const floors=[]; const sysGroups={water:[],air:[],power:[]}; const pulses=[];
+
+function box(w,h,d,mat,cast=true){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=cast;m.receiveShadow=true;return m;}
+function pipe(a,b,color,r=0.05){
+  const dir=new THREE.Vector3().subVectors(b,a); const len=dir.length();
+  const g=new THREE.CylinderGeometry(r,r,len,10);
+  const m=new THREE.Mesh(g,sysMat(color));
+  m.position.copy(a).addScaledVector(dir,0.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
+  m.castShadow=false; return m;
+}
+
+for(let f=0; f<FLOORS; f++){
+  const g=new THREE.Group(); g.position.y=f*FH; building.add(g); floors.push(g);
+  // slab
+  const slab=box(W,0.12,D,matSlab); slab.position.y=0; g.add(slab);
+  // columns
+  for(const sx of [-1,1])for(const sz of [-1,1]){
+    const col=box(0.16,FH,0.16,matFrame); col.position.set(sx*(W/2-0.18),FH/2,sz*(D/2-0.18)); g.add(col);
+  }
+  // glass facades (4 sides)
+  const gw=box(W-0.5,FH-0.25,0.04,matGlass,false); gw.position.set(0,FH/2,D/2-0.06); g.add(gw);
+  const gw2=gw.clone(); gw2.position.z=-(D/2-0.06); g.add(gw2);
+  const gs=box(0.04,FH-0.25,D-0.5,matGlass,false); gs.position.set(W/2-0.06,FH/2,0); g.add(gs);
+  const gs2=gs.clone(); gs2.position.x=-(W/2-0.06); g.add(gs2);
+  // core (central shaft)
+  const core=box(1.1,FH,1.1,matCore); core.position.set(0,FH/2,0); g.add(core);
+
+  // ---- MEP per floor ----
+  const yb=0.22;
+  // vertical risers in core corners (span the floor)
+  const risers=[['water',-0.42,-0.42],['air',0.42,-0.42],['power',-0.42,0.42]];
+  risers.forEach(([sys,x,z])=>{
+    const p=pipe(new THREE.Vector3(x,0,z),new THREE.Vector3(x,FH,z),COL[sys],0.045);
+    g.add(p); sysGroups[sys].push(p);
+  });
+  // horizontal branches across floor
+  const branches=[['water',-1, COL.water],['air',1,COL.air],['power',0,COL.power]];
+  branches.forEach(([sys,zf,col])=>{
+    const z=zf*1.1, a=new THREE.Vector3(-0.5,yb,z), b=new THREE.Vector3(W/2-0.5,yb,z);
+    const p=pipe(a,b,col,0.04); g.add(p); sysGroups[sys].push(p);
+    // outlet node
+    const node=new THREE.Mesh(new THREE.SphereGeometry(0.09,12,12),sysMat(col));
+    node.position.copy(b); g.add(node); sysGroups[sys].push(node);
+    // travelling pulse
+    const pl=new THREE.Mesh(new THREE.SphereGeometry(0.07,10,10),
+      new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.2}));
+    g.add(pl); sysGroups[sys].push(pl);
+    pulses.push({mesh:pl,a,b,t:Math.random(),sp:0.45+Math.random()*0.3,sys});
+  });
+}
+
+// roof: parapet + AHU
+const roofY=FLOORS*FH;
+const para=box(W,0.1,D,matFrame); para.position.y=roofY-FH; // top slab already there; add unit
+const ahu=box(1.6,0.7,1.1,matFrame); ahu.position.set(-1.1,roofY-FH+0.35,0.6); building.add(ahu);
+const ahu2=box(1.0,0.5,0.9,matCore); ahu2.position.set(1.0,roofY-FH+0.25,-0.5); building.add(ahu2);
+
+// center building
+building.position.y=0; controls.target.set(0,(FLOORS*FH)/2,0);
+
+// ---- explode ----
+let exTarget=0, exCur=0;
+function applyExplode(e){ floors.forEach((g,f)=>{ g.position.y=f*FH*(1+e*EXP); });
+  const top=(FLOORS-1)*FH*(1+e*EXP)+FH;
+  ahu.position.y=top-FH+0.35; ahu2.position.y=top-FH+0.25;
+}
+document.getElementById('exr').addEventListener('input',ev=>{exTarget=parseFloat(ev.target.value);firstTouch();});
+
+// ---- system toggles ----
+function toggle(sys,on){ sysGroups[sys].forEach(m=>m.visible=on); }
+for(const sys of ['water','air','power']){
+  document.getElementById('b-'+sys).addEventListener('click',e=>{
+    const b=e.currentTarget; b.classList.toggle('on'); toggle(sys,b.classList.contains('on'));
+  });
+}
+const rotBtn=document.getElementById('b-rot');
+rotBtn.addEventListener('click',()=>{controls.autoRotate=!controls.autoRotate;rotBtn.classList.toggle('on',controls.autoRotate);});
+document.getElementById('b-reset').addEventListener('click',()=>{
+  camera.position.set(11,9,13); controls.target.set(0,(FLOORS*FH)/2,0);
+  exTarget=0; document.getElementById('exr').value=0;
+});
+
+let touched=false;
+function firstTouch(){ if(!touched){touched=true; controls.autoRotate=false; rotBtn.classList.remove('on');
+  const h=document.getElementById('hint'); h.style.opacity=0;} }
+controls.addEventListener('start',firstTouch);
+setTimeout(()=>{document.getElementById('hint').style.opacity=0;},6000);
+
+// ---- resize ----
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+renderer.setSize(innerWidth,innerHeight);
+
+// ---- loop ----
+const clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),0.05);
+  exCur+=(exTarget-exCur)*Math.min(1,dt*6); applyExplode(exCur);
+  pulses.forEach(p=>{ p.t=(p.t+dt*p.sp)%1; p.mesh.position.lerpVectors(p.a,p.b,p.t); });
+  controls.update();
+  renderer.render(scene,camera);
+}
+animate();
+</script>
+</body>
+</html>
