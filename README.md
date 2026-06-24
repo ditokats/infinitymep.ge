@@ -4,17 +4,19 @@ Site for **Infinity MEP** — independent MEP (mechanical / electrical / plumbin
 
 Served via **GitHub Pages** on the custom domain **infinitymep.ge** (no build step).
 
-## Current landing page — interactive CAD drawing
-`index.html` is a text-free, full-screen **interactive AutoCAD/ArchiCAD-style site plan**:
-- Pan (drag empty space), zoom (mouse wheel), CAD crosshair + live coordinate readout.
-- **Move** any element (trees, shrubs, car, bench, lamps), **rotate** a selected element via its handle, hold **Shift** to snap rotation to 15°.
-- **Building**: drag to move, drag corner grips to resize — the dimension lines update live (metres). Movement snaps to a 0.5 m grid.
-- Toolbar (top-right, icon-only): reset view · toggle grid · toggle dimensions. `Esc` deselects.
+## Current landing page — 3D flagship
+`index.html` is a premium landing page with an interactive **3D building hero** (Three.js / WebGL) plus
+professional content (services, contact), bilingual EN / ქართული.
+- **Hero**: orbit the glass tower (drag), zoom (wheel), **explode** the floors (slider) to reveal the
+  live **MEP systems** running inside — water / HVAC / power, each with animated flow; toggle systems on/off.
+  Premium lighting (environment reflections, soft shadows, bloom on the glowing systems).
+- **Services** + **Contact** sections, refined editorial typography (Fraunces / Archivo / IBM Plex Mono).
+- Source also at `concepts/flagship.html`.
 
-All vanilla HTML/SVG/JS, single file, no dependencies.
-
-## Previous version
-`landing-classic.html` — the earlier bilingual (EN / ქართული) text landing page, kept for reference.
+## Other versions (kept for reference)
+- `landing-cad.html` — text-free interactive AutoCAD/ArchiCAD-style site plan.
+- `landing-classic.html` — earlier bilingual text landing page.
+- `concepts/` — alternative interactive concepts + gallery (`concepts/index.html`).
 
 ## Local preview
 Open `index.html` in a browser, or `python -m http.server 8000`.

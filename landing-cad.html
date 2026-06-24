@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Infinity MEP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0e11;
+    --grid:#161d24;
+    --grid2:#222e38;
+    --wht:#d7e0e6;
+    --cyan:#37c2d6;
+    --grn:#5cc878;
+    --grn2:#3c8f54;
+    --blue:#3f86d6;
+    --accent:#e2542a;
+    --yellow:#e6c24a;
+    --dim:#7e95a3;
+    --grip:#2fc6e6;
+    --cross:rgba(125,160,176,.55);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:var(--bg);font-family:"IBM Plex Mono",monospace}
+  #stage{position:fixed;inset:0}
+  svg#cad{width:100vw;height:100vh;display:block;background:
+      radial-gradient(120% 120% at 50% 0%, #10161c 0%, var(--bg) 70%);
+      cursor:none;touch-action:none}
+  svg#cad.show-cursor{cursor:default}
+
+  /* layer line styles */
+  .l-wht{stroke:var(--wht)} .l-cyan{stroke:var(--cyan)} .l-grn{stroke:var(--grn)}
+  .l-blue{stroke:var(--blue)} .l-acc{stroke:var(--accent)} .l-dim{stroke:var(--dim)}
+  .none{pointer-events:none}
+  .num{font-family:"IBM Plex Mono",monospace;fill:var(--dim);pointer-events:none;user-select:none}
+  .draggable{cursor:none}
+  .draggable:hover :is(circle,rect,path,line,polygon,polyline){filter:brightness(1.35)}
+
+  text{user-select:none}
+
+  /* hide layers */
+  svg#cad.no-grid #gridrect{display:none}
+  svg#cad.no-dims .dimgrp{display:none}
+
+  /* ---- crosshair overlay ---- */
+  #cross-v,#cross-h{position:fixed;background:var(--cross);pointer-events:none;z-index:5;display:none}
+  #cross-v{width:1px;top:0;bottom:0}
+  #cross-h{height:1px;left:0;right:0}
+  #pick{position:fixed;width:16px;height:16px;border:1px solid var(--cross);
+    transform:translate(-50%,-50%);pointer-events:none;z-index:6;display:none}
+
+  /* ---- HUD frame & chrome ---- */
+  #frame{position:fixed;inset:14px;border:1px solid rgba(125,160,176,.28);pointer-events:none;z-index:8}
+  #frame::before,#frame::after{content:"";position:absolute;width:14px;height:14px;border:1px solid var(--accent)}
+  #frame::before{top:-1px;left:-1px;border-right:none;border-bottom:none}
+  #frame::after{bottom:-1px;right:-1px;border-left:none;border-top:none}
+  .crop{position:fixed;width:9px;height:9px;border:1px solid rgba(125,160,176,.5);z-index:9;pointer-events:none}
+  .crop.tr{top:14px;right:14px;border-left:none;border-bottom:none}
+  .crop.bl{bottom:14px;left:14px;border-right:none;border-top:none}
+
+  #coords{position:fixed;left:26px;bottom:26px;z-index:10;color:var(--dim);font-size:12px;
+    letter-spacing:.06em;line-height:1.7;pointer-events:none}
+  #coords b{color:var(--cyan);font-weight:500}
+  #coords .row{display:flex;gap:8px}
+  #coords .k{color:#56707e;width:20px;display:inline-block}
+
+  /* logo title-block (graphic only) */
+  #logo{position:fixed;right:30px;bottom:24px;z-index:10;display:flex;align-items:center;gap:12px;
+    padding:10px 6px 10px 0;pointer-events:none}
+  #logo svg{width:34px;height:34px}
+  #logo .tb{width:1px;height:30px;background:rgba(125,160,176,.3)}
+  #logo .meta{display:flex;flex-direction:column;gap:3px}
+  #logo .meta i{display:block;height:1px;background:rgba(125,160,176,.45)}
+
+  /* toolbar (icon only) */
+  #tools{position:fixed;top:30px;right:30px;z-index:10;display:flex;flex-direction:column;gap:8px}
+  #tools button{width:40px;height:40px;display:grid;place-items:center;cursor:pointer;
+    background:rgba(18,24,30,.7);border:1px solid rgba(125,160,176,.28);color:var(--dim);
+    backdrop-filter:blur(6px);transition:.2s;border-radius:2px}
+  #tools button:hover{color:var(--cyan);border-color:var(--cyan)}
+  #tools button.on{color:var(--accent);border-color:var(--accent)}
+  #tools svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.6}
+
+  /* hint */
+  #hint{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:11;
+    display:flex;gap:26px;align-items:center;color:var(--dim);font-size:11px;letter-spacing:.14em;
+    padding:11px 22px;background:rgba(14,19,24,.7);border:1px solid rgba(125,160,176,.22);
+    backdrop-filter:blur(6px);transition:opacity .6s;border-radius:3px}
+  #hint .h{display:flex;align-items:center;gap:9px}
+  #hint svg{width:18px;height:18px;fill:none;stroke:var(--cyan);stroke-width:1.5}
+  #hint.gone{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <svg id="cad" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1440 900">
+    <defs>
+      <pattern id="gmin" width="20" height="20" patternUnits="userSpaceOnUse">
+        <path d="M20 0H0V20" fill="none" stroke="var(--grid)" stroke-width="1"/>
+      </pattern>
+      <pattern id="gmaj" width="100" height="100" patternUnits="userSpaceOnUse">
+        <path d="M100 0H0V100" fill="none" stroke="var(--grid2)" stroke-width="1"/>
+      </pattern>
+      <pattern id="grass" width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(0)">
+        <path d="M5 16 q1 -6 0 -9 M11 16 q-1 -5 0 -8 M17 16 q1 -6 0 -9" fill="none" stroke="var(--grn2)" stroke-width="1" opacity=".55"/>
+      </pattern>
+      <pattern id="paver" width="30" height="30" patternUnits="userSpaceOnUse">
+        <rect width="30" height="30" fill="none"/>
+        <path d="M30 0H0V30" stroke="rgba(125,160,176,.32)" stroke-width="1" fill="none"/>
+        <path d="M15 0V30 M0 15H30" stroke="rgba(125,160,176,.16)" stroke-width="1" fill="none"/>
+      </pattern>
+      <pattern id="floor" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2="13" stroke="rgba(215,224,230,.10)" stroke-width="1"/>
+      </pattern>
+      <pattern id="deck" width="14" height="14" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0" y2="14" stroke="rgba(230,194,74,.30)" stroke-width="1.4"/>
+      </pattern>
+    </defs>
+
+    <!-- pan/zoom background -->
+    <rect id="bg" x="-4000" y="-4000" width="12000" height="12000" fill="var(--bg)"/>
+    <rect id="gridrect" x="-4000" y="-4000" width="12000" height="12000" fill="url(#gmin)" class="none"/>
+    <rect x="-4000" y="-4000" width="12000" height="12000" fill="url(#gmaj)" class="none"/>
+
+    <!-- ===================== STATIC CONTEXT (non-interactive) ===================== -->
+    <g class="none">
+      <!-- property boundary -->
+      <polygon points="96,96 1344,84 1356,816 84,828" fill="none" stroke="var(--dim)"
+               stroke-width="1.4" stroke-dasharray="14 6 3 6" opacity=".8"/>
+      <!-- boundary corner ticks + coords -->
+      <g stroke="var(--dim)" stroke-width="1">
+        <path d="M96 80v32 M80 96h32"/><path d="M1344 70v30 M1330 84h30"/>
+        <path d="M1356 800v30 M1342 816h30"/><path d="M84 812v32 M70 828h30"/>
+      </g>
+      <text class="num" x="104" y="78" font-size="11">N0+00.00 · E0+00.00</text>
+      <text class="num" x="1188" y="74" font-size="11">N0+72.00 · E0+00.00</text>
+
+      <!-- lawn fields -->
+      <path d="M770 120 H1320 V790 H770 Z" fill="url(#grass)" opacity=".9"/>
+      <path d="M770 120 H1320 V790 H770 Z" fill="none" stroke="var(--grn2)" stroke-width="1" opacity=".5"/>
+      <path d="M120 150 H470 V360 H120 Z" fill="url(#grass)" opacity=".7"/>
+
+      <!-- driveway + parking (top) -->
+      <path d="M980 84 V250 H1300 V150" fill="none" stroke="var(--dim)" stroke-width="1.2" opacity=".7"/>
+      <g class="l-dim" stroke-width="1" opacity=".75" fill="none">
+        <path d="M1010 160 H1290 M1010 200 H1290 M1010 240 H1290"/>
+        <path d="M1010 160 V240 M1080 160 V240 M1150 160 V240 M1220 160 V240 M1290 160 V240"/>
+      </g>
+
+      <!-- walkway (double line + center dash) -->
+      <path d="M548 720 C 560 790, 720 800, 780 770 S 980 690, 1070 700"
+            fill="none" stroke="#10161c" stroke-width="30"/>
+      <path d="M548 720 C 560 790, 720 800, 780 770 S 980 690, 1070 700"
+            fill="none" stroke="url(#paver)" stroke-width="28"/>
+      <path d="M548 720 C 560 790, 720 800, 780 770 S 980 690, 1070 700"
+            fill="none" stroke="var(--dim)" stroke-width="1" stroke-dasharray="6 8" opacity=".6"/>
+
+      <!-- entrance plaza / paving -->
+      <rect x="470" y="638" width="190" height="92" fill="url(#paver)"/>
+      <rect x="470" y="638" width="190" height="92" fill="none" stroke="var(--dim)" stroke-width="1" opacity=".6"/>
+
+      <!-- timber deck near water -->
+      <rect x="930" y="470" width="120" height="70" fill="url(#deck)"/>
+      <rect x="930" y="470" width="120" height="70" fill="none" stroke="var(--yellow)" stroke-width="1" opacity=".5"/>
+
+      <!-- water feature with contours -->
+      <g fill="none" stroke="var(--blue)">
+        <path d="M1070 470 C 1180 450 1260 520 1230 600 C 1205 670 1090 680 1040 620 C 1000 575 1010 500 1070 470 Z"
+              fill="rgba(63,134,214,.14)" stroke-width="1.6"/>
+        <path d="M1080 492 C 1170 478 1232 532 1210 596 C 1188 654 1098 660 1058 612 C 1028 576 1034 514 1080 492 Z" stroke-width="1" opacity=".6"/>
+        <path d="M1092 514 C 1162 504 1206 546 1190 592 C 1172 636 1108 640 1078 604 C 1056 578 1060 532 1092 514 Z" stroke-width="1" opacity=".4"/>
+      </g>
+
+      <!-- contour / grading lines on lawn -->
+      <g fill="none" stroke="var(--grn2)" stroke-width="1" opacity=".35">
+        <path d="M800 700 C 900 670 1050 740 1290 700"/>
+        <path d="M800 740 C 920 715 1060 775 1290 745"/>
+      </g>
+    </g>
+
+    <!-- ===================== BUILDING (resizable) ===================== -->
+    <g id="building"></g>
+
+    <!-- ===================== INTERACTIVE OBJECTS ===================== -->
+    <!-- trees -->
+    <g class="draggable" data-kind="tree">
+      <circle cx="300" cy="250" r="58" class="l-grn" fill="rgba(92,200,120,.10)" stroke-width="1.6"/>
+      <path d="M300 250 m-58 0 a58 58 0 0 0 116 0" fill="none"/>
+      <g class="l-grn" stroke-width="1" opacity=".7" fill="none">
+        <circle cx="300" cy="250" r="44"/><circle cx="300" cy="250" r="28"/>
+        <path d="M300 192V308 M242 250H358 M259 209l82 82 M341 209l-82 82"/>
+      </g>
+    </g>
+    <g class="draggable" data-kind="tree">
+      <circle cx="1190" cy="630" r="66" class="l-grn" fill="rgba(92,200,120,.10)" stroke-width="1.6"/>
+      <g class="l-grn" stroke-width="1" opacity=".7" fill="none">
+        <circle cx="1190" cy="630" r="50"/><circle cx="1190" cy="630" r="30"/>
+        <path d="M1190 564V696 M1124 630H1256 M1143 583l94 94 M1237 583l-94 94"/>
+      </g>
+    </g>
+    <g class="draggable" data-kind="tree">
+      <circle cx="650" cy="210" r="40" class="l-grn" fill="rgba(92,200,120,.10)" stroke-width="1.6"/>
+      <g class="l-grn" stroke-width="1" opacity=".7" fill="none">
+        <circle cx="650" cy="210" r="26"/><path d="M650 170V250 M610 210H690"/>
+      </g>
+    </g>
+    <g class="draggable" data-kind="tree">
+      <circle cx="980" cy="300" r="46" class="l-grn" fill="rgba(92,200,120,.10)" stroke-width="1.6"/>
+      <g class="l-grn" stroke-width="1" opacity=".7" fill="none">
+        <circle cx="980" cy="300" r="30"/><path d="M980 254V346 M934 300H1026 M952 272l56 56 M1008 272l-56 56"/>
+      </g>
+    </g>
+    <g class="draggable" data-kind="tree">
+      <circle cx="240" cy="650" r="50" class="l-grn" fill="rgba(92,200,120,.10)" stroke-width="1.6"/>
+      <g class="l-grn" stroke-width="1" opacity=".7" fill="none">
+        <circle cx="240" cy="650" r="34"/><circle cx="240" cy="650" r="18"/>
+        <path d="M240 600V700 M190 650H290"/>
+      </g>
+    </g>
+
+    <!-- shrubs (organic clusters) -->
+    <g class="draggable" data-kind="shrub">
+      <path d="M540 520 a16 16 0 1 1 0 .1 M556 524 a14 14 0 1 1 0 .1 M548 538 a13 13 0 1 1 0 .1"
+            class="l-grn" fill="rgba(92,200,120,.10)" stroke-width="1.3"/>
+    </g>
+    <g class="draggable" data-kind="shrub">
+      <path d="M700 770 a15 15 0 1 1 0 .1 M716 776 a13 13 0 1 1 0 .1 M704 786 a12 12 0 1 1 0 .1"
+            class="l-grn" fill="rgba(92,200,120,.10)" stroke-width="1.3"/>
+    </g>
+    <g class="draggable" data-kind="shrub">
+      <path d="M890 740 a15 15 0 1 1 0 .1 M906 746 a13 13 0 1 1 0 .1 M896 756 a12 12 0 1 1 0 .1"
+            class="l-grn" fill="rgba(92,200,120,.10)" stroke-width="1.3"/>
+    </g>
+
+    <!-- car (plan view) -->
+    <g class="draggable" data-kind="car">
+      <rect x="1095" y="168" width="48" height="86" rx="9" class="l-cyan" fill="rgba(55,194,214,.10)" stroke-width="1.6"/>
+      <path d="M1101 196 h36 M1101 232 h36" class="l-cyan" stroke-width="1" fill="none" opacity=".8"/>
+      <rect x="1104" y="178" width="30" height="14" rx="3" class="l-cyan" fill="none" stroke-width="1" opacity=".8"/>
+      <rect x="1104" y="236" width="30" height="12" rx="3" class="l-cyan" fill="none" stroke-width="1" opacity=".8"/>
+    </g>
+
+    <!-- bench -->
+    <g class="draggable" data-kind="bench">
+      <rect x="612" y="700" width="56" height="18" rx="2" class="l-acc" fill="rgba(226,84,42,.12)" stroke-width="1.5"/>
+      <path d="M612 704 h56 M612 709 h56 M612 714 h56" class="l-acc" stroke-width="1" opacity=".7" fill="none"/>
+    </g>
+
+    <!-- lamp posts (circle + cross) -->
+    <g class="draggable" data-kind="lamp">
+      <circle cx="512" cy="556" r="11" class="l-yellow" fill="rgba(230,194,74,.12)" stroke="var(--yellow)" stroke-width="1.5"/>
+      <path d="M512 545v22 M501 556h22" stroke="var(--yellow)" stroke-width="1"/>
+    </g>
+    <g class="draggable" data-kind="lamp">
+      <circle cx="1250" cy="250" r="11" fill="rgba(230,194,74,.12)" stroke="var(--yellow)" stroke-width="1.5"/>
+      <path d="M1250 239v22 M1239 250h22" stroke="var(--yellow)" stroke-width="1"/>
+    </g>
+
+    <!-- ===================== ANNOTATIONS (static) ===================== -->
+    <g class="none">
+      <!-- north arrow -->
+      <g transform="translate(1290,150)">
+        <circle r="26" fill="none" stroke="var(--dim)" stroke-width="1" opacity=".5"/>
+        <polygon points="0,-30 8,6 0,-2 -8,6" fill="var(--accent)" stroke="none"/>
+        <polygon points="0,-30 0,-2 -8,6" fill="rgba(226,84,42,.4)"/>
+        <path d="M0 8 v10" stroke="var(--dim)" stroke-width="1"/>
+        <text class="num" x="-4" y="34" font-size="12" fill="var(--accent)">N</text>
+      </g>
+      <!-- scale bar -->
+      <g transform="translate(120,852)">
+        <rect x="0" y="-6" width="50" height="6" fill="var(--dim)"/>
+        <rect x="50" y="-6" width="50" height="6" fill="none" stroke="var(--dim)" stroke-width="1"/>
+        <rect x="100" y="-6" width="100" height="6" fill="var(--dim)"/>
+        <rect x="200" y="-6" width="100" height="6" fill="none" stroke="var(--dim)" stroke-width="1"/>
+        <text class="num" x="-2" y="12" font-size="10">0</text>
+        <text class="num" x="92" y="12" font-size="10">5</text>
+        <text class="num" x="190" y="12" font-size="10">10</text>
+        <text class="num" x="285" y="12" font-size="10">15 m</text>
+      </g>
+    </g>
+
+    <!-- selection overlay (drawn last = on top) -->
+    <g id="overlay"></g>
+  </svg>
+</div>
+
+<!-- crosshair -->
+<div id="cross-v"></div><div id="cross-h"></div><div id="pick"></div>
+
+<!-- chrome -->
+<div id="frame"></div><div class="crop tr"></div><div class="crop bl"></div>
+
+<div id="coords">
+  <div class="row"><span class="k">X</span><b id="cx">0.00</b> m</div>
+  <div class="row"><span class="k">Y</span><b id="cy">0.00</b> m</div>
+  <div class="row"><span class="k">Z</span><b id="cz">1:100</b></div>
+</div>
+
+<div id="tools">
+  <button id="btn-home" title="reset view">
+    <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 9v11h5v-6h4v6h5V9"/></svg>
+  </button>
+  <button id="btn-grid" class="on" title="grid">
+    <svg viewBox="0 0 24 24"><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+  </button>
+  <button id="btn-dims" class="on" title="dimensions">
+    <svg viewBox="0 0 24 24"><path d="M3 7h18M5 4v6M19 4v6M8 14v6M16 14v6M8 17h8"/></svg>
+  </button>
+</div>
+
+<div id="logo">
+  <div class="meta"><i style="width:54px"></i><i style="width:38px"></i><i style="width:46px"></i></div>
+  <div class="tb"></div>
+  <svg viewBox="0 0 30 30" fill="none">
+    <circle cx="15" cy="15" r="13" stroke="var(--dim)" stroke-width="1.4"/>
+    <path d="M7 20 H15 V11 H23" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/>
+    <circle cx="7" cy="20" r="2.2" fill="var(--accent)"/>
+    <circle cx="23" cy="11" r="2.2" fill="var(--dim)"/>
+  </svg>
+</div>
+
+<div id="hint">
+  <span class="h"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></span>
+  <span class="h"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></span>
+  <span class="h"><svg viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="18" rx="4"/><path d="M12 7v3"/></svg></span>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const svg = document.getElementById('cad');
+  const overlay = document.getElementById('overlay');
+  const bldgG = document.getElementById('building');
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const M_PER_U = 0.05;          // 1 svg unit = 0.05 m
+  const STEP = 10;               // snap = 0.5 m
+  const INIT_VB = {x:0,y:0,w:1440,h:900};
+  let vb = {...INIT_VB};
+
+  const m = v => (v*M_PER_U);
+  const snap = v => Math.round(v/STEP)*STEP;
+  const el = (n,a)=>{const e=document.createElementNS(SVGNS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+
+  /* ---------- view transform ---------- */
+  function applyVB(){
+    svg.setAttribute('viewBox',`${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+    document.getElementById('cz').textContent = '1:'+Math.round(100*vb.w/INIT_VB.w);
+    if(sel) renderSel();
+  }
+  function inv(){ return svg.getScreenCTM().inverse(); }
+  function toWorld(cx,cy,matrix){
+    const p=svg.createSVGPoint(); p.x=cx; p.y=cy;
+    return p.matrixTransform(matrix||inv());
+  }
+
+  /* ---------- building model ---------- */
+  const B = {x:360,y:392,w:360,h:236};
+  function tick(x,y,dx,dy){return `M${x-dx} ${y-dy} L${x+dx} ${y+dy}`;}
+  function redrawBuilding(){
+    const {x,y,w,h}=B, O=46;
+    const wm=m(w).toFixed(1), hm=m(h).toFixed(1);
+    bldgG.innerHTML = `
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#floor)"/>
+      <rect class="bhit" x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(215,224,230,.02)" style="cursor:none"/>
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="var(--wht)" stroke-width="3"/>
+      <rect x="${x+5}" y="${y+5}" width="${w-10}" height="${h-10}" fill="none" stroke="var(--wht)" stroke-width="1" opacity=".55"/>
+      <!-- internal partition -->
+      <path d="M${x+Math.round(w*0.58)} ${y+5} V${y+h-5}" stroke="var(--wht)" stroke-width="1" opacity=".5"/>
+      <path d="M${x+5} ${y+Math.round(h*0.5)} H${x+Math.round(w*0.58)}" stroke="var(--wht)" stroke-width="1" opacity=".5"/>
+      <!-- entrance door + swing (bottom) -->
+      <path d="M${x+w/2-26} ${y+h} h-22" stroke="var(--bg)" stroke-width="4"/>
+      <path d="M${x+w/2-26} ${y+h} v-26" stroke="var(--cyan)" stroke-width="1.4"/>
+      <path d="M${x+w/2-48} ${y+h} A26 26 0 0 1 ${x+w/2-26} ${y+h-26}" fill="none" stroke="var(--cyan)" stroke-width="1" opacity=".7"/>
+      <!-- windows -->
+      <g stroke="var(--cyan)" stroke-width="1.4">
+        <path d="M${x+40} ${y} h54"/><path d="M${x+w-94} ${y} h54"/>
+        <path d="M${x} ${y+60} v44"/><path d="M${x} ${y+h-104} v44"/>
+        <path d="M${x+w} ${y+70} v50"/>
+      </g>
+      <!-- dimension lines -->
+      <g class="dimgrp l-dim" stroke="var(--dim)" stroke-width="1" fill="none">
+        <path d="M${x} ${y} V${y-O-6}"/><path d="M${x+w} ${y} V${y-O-6}"/>
+        <path d="M${x} ${y-O} H${x+w}"/>
+        <path d="${tick(x,y-O,5,5)}"/><path d="${tick(x+w,y-O,5,5)}"/>
+        <path d="M${x} ${y} H${x-O-6}"/><path d="M${x} ${y+h} H${x-O-6}"/>
+        <path d="M${x-O} ${y} V${y+h}"/>
+        <path d="${tick(x-O,y,5,5)}"/><path d="${tick(x-O,y+h,5,5)}"/>
+      </g>
+      <text class="num dimgrp" x="${x+w/2}" y="${y-O-10}" font-size="14" text-anchor="middle" fill="var(--cyan)">${wm}</text>
+      <text class="num dimgrp" x="${x-O-10}" y="${y+h/2}" font-size="14" text-anchor="middle" fill="var(--cyan)" transform="rotate(-90 ${x-O-10} ${y+h/2})">${hm}</text>
+      <text class="num dimgrp" x="${x+10}" y="${y+22}" font-size="11">${wm} × ${hm} m</text>
+    `;
+  }
+  redrawBuilding();
+
+  /* ---------- generic objects ---------- */
+  const objs = [...document.querySelectorAll('.draggable')].map(g=>{
+    const bb = g.getBBox();
+    const st = {el:g, tx:0, ty:0, rot:0, cx:bb.x+bb.width/2, cy:bb.y+bb.height/2, bb};
+    apply(st); g.__st=st; return st;
+  });
+  function apply(st){ st.el.setAttribute('transform',`translate(${st.tx} ${st.ty}) rotate(${st.rot} ${st.cx} ${st.cy})`); }
+  function corners(st){
+    const r=st.rot*Math.PI/180, c=Math.cos(r), s=Math.sin(r), {bb,cx,cy,tx,ty}=st;
+    const pts=[[bb.x,bb.y],[bb.x+bb.width,bb.y],[bb.x+bb.width,bb.y+bb.height],[bb.x,bb.y+bb.height]];
+    return pts.map(([px,py])=>({
+      x: cx+(px-cx)*c-(py-cy)*s + tx,
+      y: cy+(px-cx)*s+(py-cy)*c + ty
+    }));
+  }
+
+  /* ---------- selection ---------- */
+  let sel=null; // {type:'obj'|'bldg', st?}
+  function clearSel(){ sel=null; overlay.innerHTML=''; }
+  function gsize(){ return Math.max(5, vb.w*0.0085); }
+  function gripRect(x,y,cls,extra){
+    const g=gsize();
+    const r=el('rect',{x:x-g,y:y-g,width:2*g,height:2*g,fill:'var(--bg)',stroke:'var(--grip)','stroke-width':vb.w*0.0016,class:cls});
+    if(extra) for(const k in extra) r.setAttribute(k,extra[k]);
+    overlay.appendChild(r); return r;
+  }
+  function renderSel(){
+    overlay.innerHTML='';
+    if(!sel) return;
+    const sw = vb.w*0.0016;
+    if(sel.type==='bldg'){
+      const {x,y,w,h}=B;
+      overlay.appendChild(el('rect',{x,y,width:w,height:h,fill:'none',stroke:'var(--grip)','stroke-width':sw,'stroke-dasharray':`${vb.w*0.006} ${vb.w*0.004}`}));
+      [['tl',x,y],['tr',x+w,y],['br',x+w,y+h],['bl',x,y+h]].forEach(([c,px,py])=>{
+        gripRect(px,py,'gcorner',{'data-c':c,style:'cursor:none'});
+      });
+    } else {
+      const c=corners(sel.st);
+      const poly=el('polygon',{points:c.map(p=>p.x+','+p.y).join(' '),fill:'none',stroke:'var(--grip)','stroke-width':sw,'stroke-dasharray':`${vb.w*0.006} ${vb.w*0.004}`});
+      overlay.appendChild(poly);
+      c.forEach(p=>gripRect(p.x,p.y,'gv'));
+      // rotate handle
+      const r=sel.st.rot*Math.PI/180;
+      const up={x:Math.sin(r), y:-Math.cos(r)};
+      const off = sel.st.bb.height/2 + vb.w*0.05;
+      const hx=sel.st.cx+sel.st.tx+up.x*off, hy=sel.st.cy+sel.st.ty+up.y*off;
+      const midx=(c[0].x+c[1].x)/2, midy=(c[0].y+c[1].y)/2;
+      overlay.appendChild(el('line',{x1:midx,y1:midy,x2:hx,y2:hy,stroke:'var(--grip)','stroke-width':sw}));
+      const hc=el('circle',{cx:hx,cy:hy,r:gsize()*1.1,fill:'var(--bg)',stroke:'var(--grip)','stroke-width':sw,class:'grot',style:'cursor:none'});
+      overlay.appendChild(hc);
+    }
+  }
+
+  /* ---------- interaction state machine ---------- */
+  let mode='idle', start=null;
+  function down(e){
+    const t=e.target;
+    const grot=t.closest('.grot'), gcorner=t.closest('.gcorner');
+    const dg=t.closest('.draggable'), bhit=t.closest('#building');
+    const M=inv(), w=toWorld(e.clientX,e.clientY,M);
+
+    if(grot && sel && sel.type==='obj'){
+      mode='rotate';
+      const st=sel.st, ang=Math.atan2(w.y-(st.cy+st.ty), w.x-(st.cx+st.tx))*180/Math.PI;
+      start={M, st, a0:ang, r0:st.rot};
+    } else if(gcorner && sel && sel.type==='bldg'){
+      mode='resize'; start={M, c:gcorner.getAttribute('data-c'), B0:{...B}};
+    } else if(dg){
+      selectObj(dg.__st); mode='drag';
+      start={M, st:dg.__st, tx0:dg.__st.tx, ty0:dg.__st.ty, wx:w.x, wy:w.y};
+    } else if(bhit){
+      selectBldg(); mode='dragB';
+      start={M, x0:B.x, y0:B.y, wx:w.x, wy:w.y};
+    } else {
+      clearSel(); mode='pan';
+      start={M, w0:w, vb0:{...vb}};
+    }
+    hideHint();
+    window.addEventListener('pointermove',move);
+    window.addEventListener('pointerup',up,{once:true});
+  }
+  function selectObj(st){ sel={type:'obj',st}; renderSel(); }
+  function selectBldg(){ sel={type:'bldg'}; renderSel(); }
+
+  function move(e){
+    if(mode==='pan'){
+      const w=toWorld(e.clientX,e.clientY,start.M);
+      vb.x = start.vb0.x + (start.w0.x-w.x);
+      vb.y = start.vb0.y + (start.w0.y-w.y);
+      applyVB(); return;
+    }
+    const w=toWorld(e.clientX,e.clientY,start.M);
+    if(mode==='drag'){
+      const st=start.st;
+      st.tx=snap(start.tx0 + (w.x-start.wx));
+      st.ty=snap(start.ty0 + (w.y-start.wy));
+      apply(st); renderSel();
+    } else if(mode==='dragB'){
+      B.x=snap(start.x0 + (w.x-start.wx));
+      B.y=snap(start.y0 + (w.y-start.wy));
+      redrawBuilding(); renderSel();
+    } else if(mode==='resize'){
+      const c=start.c, b0=start.B0;
+      let L=b0.x, R=b0.x+b0.w, T=b0.y, Bt=b0.y+b0.h;
+      const nx=snap(w.x), ny=snap(w.y), MIN=80;
+      if(c[1]==='l') L=Math.min(nx,R-MIN); else R=Math.max(nx,L+MIN);
+      if(c[0]==='t') T=Math.min(ny,Bt-MIN); else Bt=Math.max(ny,T+MIN);
+      B.x=L; B.w=R-L; B.y=T; B.h=Bt-T;
+      redrawBuilding(); renderSel();
+    } else if(mode==='rotate'){
+      const st=start.st;
+      let ang=Math.atan2(w.y-(st.cy+st.ty), w.x-(st.cx+st.tx))*180/Math.PI;
+      let nr=start.r0 + (ang-start.a0);
+      if(e.shiftKey) nr=Math.round(nr/15)*15;
+      st.rot=nr; apply(st); renderSel();
+    }
+  }
+  function up(){ mode='idle'; window.removeEventListener('pointermove',move); }
+  svg.addEventListener('pointerdown',down);
+
+  /* ---------- wheel zoom ---------- */
+  svg.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const w=toWorld(e.clientX,e.clientY);
+    const f = e.deltaY<0 ? 0.86 : 1.163;
+    let nw=vb.w*f, nh=vb.h*f;
+    if(nw<240||nw>4600) return;
+    vb.x = w.x-(w.x-vb.x)*f; vb.y=w.y-(w.y-vb.y)*f; vb.w=nw; vb.h=nh;
+    applyVB();
+  },{passive:false});
+
+  /* ---------- crosshair + coords ---------- */
+  const cv=document.getElementById('cross-v'), ch=document.getElementById('cross-h'), pk=document.getElementById('pick');
+  const ox=document.getElementById('cx'), oy=document.getElementById('cy');
+  svg.addEventListener('pointermove',e=>{
+    if(e.pointerType==='mouse'){
+      cv.style.display=ch.style.display=pk.style.display='block';
+      cv.style.left=e.clientX+'px'; ch.style.top=e.clientY+'px';
+      pk.style.left=e.clientX+'px'; pk.style.top=e.clientY+'px';
+    }
+    const w=toWorld(e.clientX,e.clientY);
+    ox.textContent=m(w.x).toFixed(2); oy.textContent=m(w.y).toFixed(2);
+  });
+  svg.addEventListener('pointerleave',()=>{cv.style.display=ch.style.display=pk.style.display='none';});
+
+  /* ---------- toolbar ---------- */
+  document.getElementById('btn-home').onclick=()=>{vb={...INIT_VB};applyVB();clearSel();};
+  const bg=document.getElementById('btn-grid'), bd=document.getElementById('btn-dims');
+  bg.onclick=()=>{svg.classList.toggle('no-grid');bg.classList.toggle('on');};
+  bd.onclick=()=>{svg.classList.toggle('no-dims');bd.classList.toggle('on');};
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') clearSel(); });
+
+  /* ---------- hint ---------- */
+  let hintTimer=setTimeout(hideHint,6000);
+  function hideHint(){ document.getElementById('hint').classList.add('gone'); clearTimeout(hintTimer); }
+
+  applyVB();
+})();
+</script>
+</body>
+</html>
